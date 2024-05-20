@@ -1,0 +1,54 @@
+﻿@page "/weatherList"
+@rendermode InteractiveServer
+@inject HttpClient Http
+
+<PageTitle>Weather Forecast List</PageTitle>
+
+<h1>Weather Forecast List</h1>
+
+
+@if (weathers == null)
+{
+<p><em>Loading...</em></p>
+}
+else if (!weathers.Any()) 
+{ 
+<p><em>No forecast available</em></p>
+}
+else
+{
+<button>Add Forecast</button>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date & Time</th>
+            <th>Location</th>
+            <th>Temp. (C)</th>
+            <th>Summary</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var forecast in weathers)
+        {
+        <tr>
+            <td>@forecast.Date.ToShortDateString()</td>
+            <td>@forecast.Location</td>
+            <td>@forecast.TemperatureC</td>
+            <td>@forecast.Summary</td>
+            <td><button>Edit</button><button>Delete</button></td>
+        </tr>
+        }
+    </tbody>
+</table>
+}
+
+@code {
+
+    List<WeatherApp.Models.Weather> weathers = new List<WeatherApp.Models.Weather>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        weathers = await Http.GetFromJsonAsync<List<WeatherApp.Models.Weather>>("api/weather");
+    }
+}
