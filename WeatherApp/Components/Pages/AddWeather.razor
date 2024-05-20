@@ -1,9 +1,9 @@
-﻿@page "/editWeather/{id:int}"
+﻿@page "/addWeather"
 @rendermode InteractiveServer
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
-    <EditForm Model="weather" OnSubmit="HandleEdit">
+    <form Model="weather">
         <div class="form-group">
             <label for="name">Date</label>
             <InputDate id="name" class="form-control" @bind-Value="weather.Date" />
@@ -20,22 +20,16 @@
             <label for="name">Summary</label>
             <InputText id="name" class="form-control" @bind-Value="weather.Summary" />
         </div>
-        <button type="submit" class="btn btn-primary">Save</button>
+    <button type="button" class="btn btn-primary" @onclick="HandleSubmit">Save</button>
         <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
-    </EditForm>
+    </form>
+
 @code {
-    [Parameter] public int? Id { get; set; }
     WeatherApp.Models.Weather? weather = new();
 
-    protected override async Task OnInitializedAsync()
+    private async Task HandleSubmit()
     {
-        weather = await Http.GetFromJsonAsync<WeatherApp.Models.Weather>($"api/weather/{Id}");
-    }
-
-    private async Task HandleEdit()
-    {
-        await Http.PutAsJsonAsync($"/api/weather/{Id}", weather);
-        OnInitialized();
+        await Http.PostAsJsonAsync($"api/weather", weather);
     }
 
     private void NavigateBack()

@@ -1,6 +1,7 @@
 ﻿@page "/weatherList"
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject NavigationManager Navigation
 
 <PageTitle>Weather Forecast List</PageTitle>
 
@@ -13,11 +14,12 @@
 }
 else if (!weathers.Any()) 
 { 
-<p><em>No forecast available</em></p>
+<button @onclick="() => AddWeather()">Add Forecast</button>
+<p><em>No weather forecast available</em></p>
 }
 else
 {
-<button>Add Forecast</button>
+<button @onclick="() => AddWeather()">Add Forecast</button>
 <table class="table">
     <thead>
         <tr>
@@ -36,7 +38,7 @@ else
             <td>@forecast.Location</td>
             <td>@forecast.TemperatureC</td>
             <td>@forecast.Summary</td>
-            <td><button>Edit</button><button>Delete</button></td>
+                    <td><button @onclick="() => EditWeather(forecast.Id)">Edit</button><button @onclick="() => DeleteWeather(forecast.Id)">Delete</button></td>
         </tr>
         }
     </tbody>
@@ -45,10 +47,26 @@ else
 
 @code {
 
-    List<WeatherApp.Models.Weather> weathers = new List<WeatherApp.Models.Weather>();
+    List<WeatherApp.Models.Weather>? weathers = new List<WeatherApp.Models.Weather>();
 
     protected override async Task OnInitializedAsync()
     {
         weathers = await Http.GetFromJsonAsync<List<WeatherApp.Models.Weather>>("api/weather");
+    }
+
+    private async Task DeleteWeather(int id)
+    {
+        await Http.DeleteAsync($"api/weather/{id}");
+        await OnInitializedAsync();
+    }
+
+    private void AddWeather()
+    {
+        Navigation.NavigateTo("/addWeather");
+    }
+
+    private void EditWeather(int id)
+    {
+        Navigation.NavigateTo($"/editWeather/{id}");
     }
 }
