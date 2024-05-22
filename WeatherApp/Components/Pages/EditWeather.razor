@@ -24,17 +24,19 @@
         <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
     </EditForm>
 @code {
-    [Parameter] public int? Id { get; set; }
+    [Parameter] 
+    public int? id { get; set; }
+
     WeatherApp.Models.Weather? weather = new();
 
     protected override async Task OnInitializedAsync()
     {
-        weather = await Http.GetFromJsonAsync<WeatherApp.Models.Weather>($"api/weather/{Id}");
+        weather = await Http.GetFromJsonAsync<WeatherApp.Models.Weather>($"api/weather/{id}");
     }
 
     private async Task HandleEdit()
     {
-        await Http.PutAsJsonAsync($"/api/weather/{Id}", weather);
+        await Http.PutAsJsonAsync($"/api/weather/{id}", weather);
         OnInitialized();
     }
 

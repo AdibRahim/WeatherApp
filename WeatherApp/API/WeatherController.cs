@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Text.Json;
 using WeatherApp.Data;
 using WeatherApp.Models;
 
@@ -15,6 +16,10 @@ public class WeatherController : ControllerBase
 {
     private readonly MyDbContext _database;
 
+    private static readonly HttpClient client = new HttpClient();
+    private const string ApiKey = "b1c170d869bc4bbeb8bbbea074e6ea1a"; 
+    private const string OpenWeatherURL = "http://api.openweathermap.org/data/2.5/weather";
+
     public WeatherController(MyDbContext database)
     {
         _database = database;
@@ -25,13 +30,22 @@ public class WeatherController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Weather>>> Get()
     {
+        // There should be filtering for pagination here
+        // Just take 20 so that in future doesn't cause high memory take a lot of data
         return await _database.Weathers.ToListAsync();
     }
 
     // GET api/<WeatherController>/5
     [HttpGet("{id}")]
-    public ActionResult Get(int id)
+    public ActionResult Get([FromRoute] int id)
     {
+        // Should be validation for query parameter
+        // 0 is the default value for integer
+        if (id == 0)
+        {
+            throw new ArgumentNullException();
+        } 
+
         Weather? weather = _database.Weathers.FirstOrDefault(x => x.Id == id);
         if (weather is null)
         {
@@ -44,6 +58,7 @@ public class WeatherController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] Weather weather)
     {
+        // Validate 
         await _database.Weathers.AddAsync(weather);
         await _database.SaveChangesAsync();
         return Ok();
@@ -53,6 +68,7 @@ public class WeatherController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult Put(int id, [FromBody] Weather weather)
     {
+        // Validate id
         if (id != weather.Id)
         {
             return BadRequest("Id is invalid.");
@@ -80,9 +96,23 @@ public class WeatherController : ControllerBase
     #region Custom
     [HttpGet]
     [Route(nameof(GetWeatherForeCastByLatitudeAndLongitude))]
-    public ActionResult GetWeatherForeCastByLatitudeAndLongitude(double latitude, double longitude)
+    public async Task<ActionResult> GetWeatherForeCastByLatitudeAndLongitude([FromQuery] double latitude,[FromQuery] double longitude)
     {
-        return Ok();
+        string url = $"{OpenWeatherURL}?lat={latitude}&lon={longitude}&appid={ApiKey}";
+        try
+        {
+            var response = await client.GetStringAsync(url);
+            WeatherResponse? weatherResponse = JsonSerializer.Deserialize<WeatherResponse>(response);
+            if (weatherResponse == null)
+            {
+                throw new InvalidOperationException();
+            }
+            return Ok(weatherResponse);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
     #endregion
 }

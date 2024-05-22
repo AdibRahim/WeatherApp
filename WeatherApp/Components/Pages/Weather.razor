@@ -1,64 +1,52 @@
 ﻿@page "/weather"
-@attribute [StreamRendering]
+@using WeatherApp.Models
+@rendermode InteractiveServer
+@inject HttpClient Http
 
 <PageTitle>Weather</PageTitle>
 
-<h1>Weather</h1>
+<h1>Open Weather API</h1>
 
-<p>This component demonstrates showing data.</p>
+<p>Hi, this is weather forecast from Open Weather API.</p>
 
-@if (forecasts == null)
+<label>Latitude :</label>
+
+<InputText type="text" @bind-Value="latitude"/>
+
+<label>Longitude :</label>
+
+<InputText type="text" @bind-Value="longitude"></InputText>
+
+<button type="button" @onclick="GetWeather">Get Weather</button>
+
+@if(weather != null)
 {
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div>
+  Weather: @weather.Weather.First().Main
+</div>
+
+<div>Country : @weather.Sys.Country</div>
+
+<div>Wind Speed : @weather.Wind.Speed</div>
+
+<div>Temperature : @weather.Main.Temp</div>
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    string latitude { get; set; }
+    string longitude { get; set; }
+
+    WeatherResponse? weather;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
-
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+        latitude = "4.2105";
+        longitude = "101.9758";
     }
 
-    private class WeatherForecast
+    public async Task GetWeather()
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        weather = await Http.GetFromJsonAsync<WeatherResponse>($"api/weather/GetWeatherForeCastByLatitudeAndLongitude?latitude={latitude}&longitude={longitude}");
     }
+
 }
